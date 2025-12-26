@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Heart, Shield } from "lucide-react";
+import { Menu, X, Heart, LogIn, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import AdminLoginModal from "./AdminLoginModal";
 import AdminPanel from "./AdminPanel";
@@ -108,7 +108,7 @@ const Navbar = () => {
                 <Link
                   key={link.name}
                   to={link.href}
-                  className="text-muted-foreground hover:text-primary transition-colors duration-200 font-medium"
+                  className="text-foreground/90 hover:text-primary transition-colors duration-200 font-semibold text-sm tracking-wide"
                 >
                   {link.name}
                 </Link>
@@ -116,7 +116,7 @@ const Navbar = () => {
                 <a
                   key={link.name}
                   href={link.href}
-                  className="text-muted-foreground hover:text-primary transition-colors duration-200 font-medium"
+                  className="text-foreground/90 hover:text-primary transition-colors duration-200 font-semibold text-sm tracking-wide"
                 >
                   {link.name}
                 </a>
@@ -126,9 +126,8 @@ const Navbar = () => {
 
           {/* CTA Buttons */}
           <div className="hidden lg:flex items-center gap-3">
-            <Button variant="ghost" size="sm" onClick={handleAdminClick}>
-              <Shield className="w-4 h-4 mr-2" />
-              {isAdmin ? "Admin Panel" : "Admin"}
+            <Button variant="ghost" size="icon" onClick={handleAdminClick} title={isAdmin ? "Admin Panel" : "Login"}>
+              {isAdmin ? <Settings className="w-5 h-5" /> : <LogIn className="w-5 h-5" />}
             </Button>
             <Button variant="outline" size="sm">
               Start a Fundraiser
@@ -181,8 +180,8 @@ const Navbar = () => {
                 )}
                 <div className="flex flex-col gap-3 pt-4 border-t border-border">
                   <Button variant="ghost" className="w-full justify-start" onClick={handleAdminClick}>
-                    <Shield className="w-4 h-4 mr-2" />
-                    {isAdmin ? "Admin Panel" : "Admin Login"}
+                    {isAdmin ? <Settings className="w-4 h-4 mr-2" /> : <LogIn className="w-4 h-4 mr-2" />}
+                    {isAdmin ? "Admin Panel" : "Login"}
                   </Button>
                   <Button variant="outline" className="w-full">
                     Start a Fundraiser
