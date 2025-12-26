@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, Heart, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -65,13 +66,16 @@ const Navbar = () => {
     setIsAdminPanelOpen(true);
   };
 
+  const location = useLocation();
+  const isHomePage = location.pathname === "/";
+
   const navLinks = [
-    { name: "Home", href: "#home" },
-    { name: "About", href: "#about" },
-    { name: "Causes", href: "#causes" },
-    { name: "Fundraisers", href: "#fundraisers" },
-    { name: "How It Works", href: "#how-it-works" },
-    { name: "Contact", href: "#contact" },
+    { name: "Home", href: isHomePage ? "#home" : "/", isRoute: !isHomePage },
+    { name: "About", href: isHomePage ? "#about" : "/#about", isRoute: !isHomePage },
+    { name: "Causes", href: isHomePage ? "#causes" : "/#causes", isRoute: !isHomePage },
+    { name: "Fundraisers", href: "/fundraisers", isRoute: true },
+    { name: "How It Works", href: isHomePage ? "#how-it-works" : "/#how-it-works", isRoute: !isHomePage },
+    { name: "Contact", href: isHomePage ? "#contact" : "/#contact", isRoute: !isHomePage },
   ];
 
   return (
@@ -99,15 +103,25 @@ const Navbar = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center gap-8">
-            {navLinks.map((link) => (
-              <a
-                key={link.name}
-                href={link.href}
-                className="text-muted-foreground hover:text-primary transition-colors duration-200 font-medium"
-              >
-                {link.name}
-              </a>
-            ))}
+            {navLinks.map((link) =>
+              link.isRoute ? (
+                <Link
+                  key={link.name}
+                  to={link.href}
+                  className="text-muted-foreground hover:text-primary transition-colors duration-200 font-medium"
+                >
+                  {link.name}
+                </Link>
+              ) : (
+                <a
+                  key={link.name}
+                  href={link.href}
+                  className="text-muted-foreground hover:text-primary transition-colors duration-200 font-medium"
+                >
+                  {link.name}
+                </a>
+              )
+            )}
           </div>
 
           {/* CTA Buttons */}
@@ -144,16 +158,27 @@ const Navbar = () => {
               className="lg:hidden bg-card border-t border-border"
             >
               <div className="container mx-auto px-4 py-6 flex flex-col gap-4">
-                {navLinks.map((link) => (
-                  <a
-                    key={link.name}
-                    href={link.href}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="text-foreground hover:text-primary transition-colors py-2 font-medium"
-                  >
-                    {link.name}
-                  </a>
-                ))}
+                {navLinks.map((link) =>
+                  link.isRoute ? (
+                    <Link
+                      key={link.name}
+                      to={link.href}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="text-foreground hover:text-primary transition-colors py-2 font-medium"
+                    >
+                      {link.name}
+                    </Link>
+                  ) : (
+                    <a
+                      key={link.name}
+                      href={link.href}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="text-foreground hover:text-primary transition-colors py-2 font-medium"
+                    >
+                      {link.name}
+                    </a>
+                  )
+                )}
                 <div className="flex flex-col gap-3 pt-4 border-t border-border">
                   <Button variant="ghost" className="w-full justify-start" onClick={handleAdminClick}>
                     <Shield className="w-4 h-4 mr-2" />

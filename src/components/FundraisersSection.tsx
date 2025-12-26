@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Clock, Users, ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -48,9 +49,11 @@ const FundraisersSection = () => {
               These campaigns need your support right now. Every contribution brings hope.
             </p>
           </div>
-          <Button variant="outline" className="mt-6 md:mt-0 group">
-            View All Fundraisers
-            <ArrowRight className="ml-2 w-4 h-4 transition-transform group-hover:translate-x-1" />
+          <Button variant="outline" className="mt-6 md:mt-0 group" asChild>
+            <Link to="/fundraisers">
+              View All Fundraisers
+              <ArrowRight className="ml-2 w-4 h-4 transition-transform group-hover:translate-x-1" />
+            </Link>
           </Button>
         </motion.div>
 
