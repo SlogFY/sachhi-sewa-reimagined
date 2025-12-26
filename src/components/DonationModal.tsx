@@ -70,27 +70,30 @@ const DonationModal = ({ isOpen, onClose, campaign, onDonationComplete }: Donati
     setStep("processing");
 
     try {
-      const { data, error } = await supabase
-        .from("donations")
-        .insert({
-          campaign_id: campaign.id,
-          donor_name: formData.name,
-          donor_email: formData.email,
-          donor_phone: formData.phone || null,
-          amount: amount,
-          message: formData.message || null,
-          receipt_number: "TEMP", // Will be replaced by trigger
-        })
-        .select()
-        .single();
+      // NOTE: Public donors (not logged in) cannot SELECT from the donations table (admin-only).
+      // So we generate a receipt number client-side and avoid `.select()` on insert.
+      const receiptNumber = `RCP-${new Date().toISOString().slice(0, 10).replace(/-/g, "")}-${Math.random()
+        .toString(16)
+        .slice(2, 10)
+        .toUpperCase()}`;
+
+      const { error } = await supabase.from("donations").insert({
+        campaign_id: campaign.id,
+        donor_name: formData.name,
+        donor_email: formData.email,
+        donor_phone: formData.phone || null,
+        amount,
+        message: formData.message || null,
+        receipt_number: receiptNumber,
+      });
 
       if (error) throw error;
 
       setReceipt({
-        receipt_number: data.receipt_number,
+        receipt_number: receiptNumber,
         donor_name: formData.name,
         donor_email: formData.email,
-        amount: amount,
+        amount,
         campaign_title: campaign.title,
         date: new Date().toLocaleDateString("en-IN", {
           day: "numeric",
