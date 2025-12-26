@@ -1,43 +1,10 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { Clock, Users, ArrowRight } from "lucide-react";
+import { Clock, Users, ArrowRight, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-
-const fundraisers = [
-  {
-    id: 1,
-    title: "Save Ranjan From Sigmoid Colon Cancer",
-    description: "Mr. Ranjan Kumar Sahani, a 33-year-old, has been diagnosed with recurrent adenocarcinoma. Help him get the treatment he desperately needs.",
-    image: "https://images.unsplash.com/photo-1584515933487-779824d29309?auto=format&fit=crop&w=800&q=80",
-    raised: 178002,
-    goal: 3676000,
-    daysLeft: 15,
-    donors: 42,
-    category: "Medical",
-  },
-  {
-    id: 2,
-    title: "Help Priya Complete Her Engineering",
-    description: "Priya comes from a humble background and dreams of becoming an engineer. Support her education journey.",
-    image: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=800&q=80",
-    raised: 125000,
-    goal: 250000,
-    daysLeft: 30,
-    donors: 28,
-    category: "Education",
-  },
-  {
-    id: 3,
-    title: "Rescue & Rehabilitation for Street Animals",
-    description: "Help us provide medical care, shelter, and food for stray animals in Delhi NCR region.",
-    image: "https://images.unsplash.com/photo-1601758228041-f3b2795255f1?auto=format&fit=crop&w=800&q=80",
-    raised: 89000,
-    goal: 150000,
-    daysLeft: 20,
-    donors: 65,
-    category: "Animal Welfare",
-  },
-];
+import { useCampaigns, Campaign } from "@/hooks/useCampaigns";
+import DonationModal from "./DonationModal";
 
 const formatCurrency = (amount: number) => {
   if (amount >= 100000) {
@@ -47,6 +14,19 @@ const formatCurrency = (amount: number) => {
 };
 
 const FundraisersSection = () => {
+  const { campaigns, isLoading, refetch } = useCampaigns();
+  const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
+  const [isDonationModalOpen, setIsDonationModalOpen] = useState(false);
+
+  const handleDonateClick = (campaign: Campaign) => {
+    setSelectedCampaign(campaign);
+    setIsDonationModalOpen(true);
+  };
+
+  const handleDonationComplete = () => {
+    refetch();
+  };
+
   return (
     <section id="fundraisers" className="py-24 bg-gradient-soft">
       <div className="container mx-auto px-4">
@@ -74,77 +54,100 @@ const FundraisersSection = () => {
           </Button>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {fundraisers.map((fundraiser, index) => (
-            <motion.div
-              key={fundraiser.id}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.6, delay: index * 0.1 }}
-              className="group"
-            >
-              <div className="bg-card rounded-2xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 border border-border/50 hover:border-primary/30">
-                {/* Image */}
-                <div className="relative h-48 overflow-hidden">
-                  <img
-                    src={fundraiser.image}
-                    alt={fundraiser.title}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                  />
-                  <div className="absolute top-4 left-4">
-                    <span className="bg-primary text-primary-foreground text-xs font-semibold px-3 py-1 rounded-full">
-                      {fundraiser.category}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Content */}
-                <div className="p-6">
-                  <h3 className="text-lg font-display font-bold text-foreground mb-2 line-clamp-2 group-hover:text-primary transition-colors">
-                    {fundraiser.title}
-                  </h3>
-                  <p className="text-muted-foreground text-sm mb-4 line-clamp-2">
-                    {fundraiser.description}
-                  </p>
-
-                  {/* Progress */}
-                  <div className="mb-4">
-                    <div className="flex justify-between text-sm mb-2">
-                      <span className="font-semibold text-primary">
-                        {formatCurrency(fundraiser.raised)} raised
-                      </span>
-                      <span className="text-muted-foreground">
-                        of {formatCurrency(fundraiser.goal)}
-                      </span>
-                    </div>
-                    <Progress
-                      value={(fundraiser.raised / fundraiser.goal) * 100}
-                      className="h-2"
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-8 h-8 text-primary animate-spin" />
+          </div>
+        ) : campaigns.length === 0 ? (
+          <div className="text-center py-12 text-muted-foreground">
+            No active campaigns at the moment.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {campaigns.slice(0, 6).map((campaign, index) => (
+              <motion.div
+                key={campaign.id}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+                className="group"
+              >
+                <div className="bg-card rounded-2xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 border border-border/50 hover:border-primary/30">
+                  {/* Image */}
+                  <div className="relative h-48 overflow-hidden">
+                    <img
+                      src={campaign.image_url || "https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?w=800"}
+                      alt={campaign.title}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                     />
-                  </div>
-
-                  {/* Meta */}
-                  <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
-                    <div className="flex items-center gap-1">
-                      <Clock className="w-4 h-4" />
-                      <span>{fundraiser.daysLeft} days left</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Users className="w-4 h-4" />
-                      <span>{fundraiser.donors} donors</span>
+                    <div className="absolute top-4 left-4">
+                      <span className="bg-primary text-primary-foreground text-xs font-semibold px-3 py-1 rounded-full">
+                        {campaign.category}
+                      </span>
                     </div>
                   </div>
 
-                  <Button variant="primary" className="w-full">
-                    Donate Now
-                  </Button>
+                  {/* Content */}
+                  <div className="p-6">
+                    <h3 className="text-lg font-display font-bold text-foreground mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+                      {campaign.title}
+                    </h3>
+                    <p className="text-muted-foreground text-sm mb-4 line-clamp-2">
+                      {campaign.description}
+                    </p>
+
+                    {/* Progress */}
+                    <div className="mb-4">
+                      <div className="flex justify-between text-sm mb-2">
+                        <span className="font-semibold text-primary">
+                          {formatCurrency(Number(campaign.amount_raised))} raised
+                        </span>
+                        <span className="text-muted-foreground">
+                          of {formatCurrency(Number(campaign.goal_amount))}
+                        </span>
+                      </div>
+                      <Progress
+                        value={(Number(campaign.amount_raised) / Number(campaign.goal_amount)) * 100}
+                        className="h-2"
+                      />
+                    </div>
+
+                    {/* Meta */}
+                    <div className="flex items-center justify-between text-sm text-muted-foreground mb-4">
+                      <div className="flex items-center gap-1">
+                        <Clock className="w-4 h-4" />
+                        <span>Ongoing</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Users className="w-4 h-4" />
+                        <span>
+                          {((Number(campaign.amount_raised) / Number(campaign.goal_amount)) * 100).toFixed(0)}% funded
+                        </span>
+                      </div>
+                    </div>
+
+                    <Button 
+                      variant="primary" 
+                      className="w-full"
+                      onClick={() => handleDonateClick(campaign)}
+                    >
+                      Donate Now
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
       </div>
+
+      <DonationModal
+        isOpen={isDonationModalOpen}
+        onClose={() => setIsDonationModalOpen(false)}
+        campaign={selectedCampaign}
+        onDonationComplete={handleDonationComplete}
+      />
     </section>
   );
 };
