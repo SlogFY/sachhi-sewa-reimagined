@@ -189,10 +189,10 @@ const AdminPanel = ({ isOpen, onClose }: AdminPanelProps) => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 bg-background"
+          className="fixed inset-0 z-50 bg-background flex flex-col"
         >
           {/* Header */}
-          <div className="bg-card border-b border-border">
+          <div className="bg-card border-b border-border shrink-0">
             <div className="container mx-auto px-4 py-4 flex items-center justify-between">
               <h1 className="text-2xl font-display font-bold text-foreground">Admin Panel</h1>
               <div className="flex items-center gap-3">
@@ -210,7 +210,8 @@ const AdminPanel = ({ isOpen, onClose }: AdminPanelProps) => {
             </div>
           </div>
 
-          <div className="container mx-auto px-4 py-8">
+          <div className="flex-1 overflow-y-auto">
+            <div className="container mx-auto px-4 py-8">
             {/* Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
               <div className="bg-card rounded-xl p-6 border border-border">
@@ -460,6 +461,7 @@ const AdminPanel = ({ isOpen, onClose }: AdminPanelProps) => {
                 )}
               </>
             )}
+            </div>
           </div>
         </motion.div>
       )}
