@@ -1,19 +1,20 @@
 import { Heart, Mail, Phone, MapPin, Facebook, Twitter, Instagram, Linkedin } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
 
   const quickLinks = [
-    { name: "About Us", href: "#about" },
-    { name: "How It Works", href: "#how-it-works" },
-    { name: "Start a Fundraiser", href: "#" },
-    { name: "Browse Causes", href: "#causes" },
-    { name: "Success Stories", href: "#" },
+    { name: "About Us", href: "/about" },
+    { name: "How It Works", href: "/how-it-works" },
+    { name: "Start a Fundraiser", href: "/fundraisers" },
+    { name: "Browse Causes", href: "/causes" },
+    { name: "Contact Us", href: "/contact" },
   ];
 
   const supportLinks = [
-    { name: "FAQs", href: "#" },
-    { name: "Contact Us", href: "#contact" },
+    { name: "FAQs", href: "/how-it-works" },
+    { name: "Contact Us", href: "/contact" },
     { name: "Privacy Policy", href: "#" },
     { name: "Terms of Service", href: "#" },
     { name: "Refund Policy", href: "#" },
@@ -65,12 +66,12 @@ const Footer = () => {
             <ul className="space-y-3">
               {quickLinks.map((link, index) => (
                 <li key={index}>
-                  <a
-                    href={link.href}
+                  <Link
+                    to={link.href}
                     className="text-primary-foreground/70 hover:text-primary transition-colors text-sm"
                   >
                     {link.name}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -82,12 +83,21 @@ const Footer = () => {
             <ul className="space-y-3">
               {supportLinks.map((link, index) => (
                 <li key={index}>
-                  <a
-                    href={link.href}
-                    className="text-primary-foreground/70 hover:text-primary transition-colors text-sm"
-                  >
-                    {link.name}
-                  </a>
+                  {link.href.startsWith("#") ? (
+                    <a
+                      href={link.href}
+                      className="text-primary-foreground/70 hover:text-primary transition-colors text-sm"
+                    >
+                      {link.name}
+                    </a>
+                  ) : (
+                    <Link
+                      to={link.href}
+                      className="text-primary-foreground/70 hover:text-primary transition-colors text-sm"
+                    >
+                      {link.name}
+                    </Link>
+                  )}
                 </li>
               ))}
             </ul>
