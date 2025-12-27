@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, Heart, CircleUser, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import AdminPanel from "./AdminPanel";
 import { supabase } from "@/integrations/supabase/client";
 
 const Navbar = () => {
+  const navigate = useNavigate();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isAdminLoginOpen, setIsAdminLoginOpen] = useState(false);
@@ -129,10 +130,10 @@ const Navbar = () => {
             <Button variant="ghost" size="icon" onClick={handleAdminClick} title={isAdmin ? "Admin Panel" : "Login"}>
               {isAdmin ? <Settings className="w-5 h-5" /> : <CircleUser className="w-5 h-5" />}
             </Button>
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" onClick={() => navigate('/start-fundraiser')}>
               Start a Fundraiser
             </Button>
-            <Button variant="primary" size="sm">
+            <Button variant="primary" size="sm" onClick={() => navigate('/fundraisers')}>
               Donate Now
             </Button>
           </div>
@@ -183,10 +184,10 @@ const Navbar = () => {
                     {isAdmin ? <Settings className="w-4 h-4 mr-2" /> : <CircleUser className="w-4 h-4 mr-2" />}
                     {isAdmin ? "Admin Panel" : "Login"}
                   </Button>
-                  <Button variant="outline" className="w-full">
+                  <Button variant="outline" className="w-full" onClick={() => { setIsMobileMenuOpen(false); navigate('/start-fundraiser'); }}>
                     Start a Fundraiser
                   </Button>
-                  <Button variant="primary" className="w-full">
+                  <Button variant="primary" className="w-full" onClick={() => { setIsMobileMenuOpen(false); navigate('/fundraisers'); }}>
                     Donate Now
                   </Button>
                 </div>
