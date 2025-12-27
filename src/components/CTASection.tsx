@@ -37,7 +37,7 @@ const CTASection = () => {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button variant="cta" size="lg" className="group" onClick={() => navigate('/fundraisers')}>
+            <Button variant="cta" size="lg" className="group" onClick={() => navigate('/start-fundraiser')}>
               Start a Fundraiser
               <ArrowRight className="ml-2 w-5 h-5 transition-transform group-hover:translate-x-1" />
             </Button>
