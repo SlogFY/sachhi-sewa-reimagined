@@ -133,8 +133,27 @@ const Navbar = () => {
             <Button variant="outline" size="sm" onClick={() => navigate('/start-fundraiser')}>
               Start a Fundraiser
             </Button>
-            <Button variant="primary" size="sm" onClick={() => navigate('/fundraisers')}>
-              Donate Now
+            <Button 
+              variant="primary" 
+              size="sm" 
+              onClick={() => navigate('/monthly-donate')}
+              className="relative overflow-hidden group"
+            >
+              <span className="relative z-10 flex items-center gap-1">
+                <motion.span
+                  animate={{ scale: [1, 1.15, 1] }}
+                  transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+                >
+                  ❤️
+                </motion.span>
+                Monthly Donate
+              </span>
+              <motion.div
+                className="absolute inset-0 bg-gradient-to-r from-primary via-primary-glow to-primary"
+                animate={{ x: ["-100%", "100%"] }}
+                transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
+                style={{ opacity: 0.3 }}
+              />
             </Button>
           </div>
 
@@ -187,8 +206,8 @@ const Navbar = () => {
                   <Button variant="outline" className="w-full" onClick={() => { setIsMobileMenuOpen(false); navigate('/start-fundraiser'); }}>
                     Start a Fundraiser
                   </Button>
-                  <Button variant="primary" className="w-full" onClick={() => { setIsMobileMenuOpen(false); navigate('/fundraisers'); }}>
-                    Donate Now
+                  <Button variant="primary" className="w-full" onClick={() => { setIsMobileMenuOpen(false); navigate('/monthly-donate'); }}>
+                    ❤️ Monthly Donate
                   </Button>
                 </div>
               </div>
