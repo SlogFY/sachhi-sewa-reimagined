@@ -15,6 +15,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
+import { supabase } from "@/integrations/supabase/client";
 import Footer from "@/components/Footer";
 
 const monthlyPlans = [
@@ -76,16 +77,42 @@ const MonthlyDonate = () => {
 
     setIsSubmitting(true);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    toast({
-      title: "Monthly Donation Initiated! 🎉",
-      description: `Thank you for pledging ₹${selectedAmount}/month. You'll receive a confirmation email shortly.`,
-    });
-    
-    setIsSubmitting(false);
-    navigate("/");
+    try {
+      const selectedPlanData = monthlyPlans.find(p => p.id === selectedPlan);
+      
+      const donationData = {
+        donor_name: formData.name,
+        donor_email: formData.email,
+        donor_phone: formData.phone || null,
+        amount: selectedAmount,
+        plan_id: selectedPlan,
+        plan_name: selectedPlanData?.name || selectedPlan,
+        is_indian_citizen: formData.isIndianCitizen === "yes",
+        receipt_number: 'TEMP', // Will be overwritten by trigger
+      };
+
+      const { error } = await supabase
+        .from("monthly_donations")
+        .insert(donationData as any);
+
+      if (error) throw error;
+
+      toast({
+        title: "Monthly Donation Initiated! 🎉",
+        description: `Thank you for pledging ₹${selectedAmount}/month. You'll receive a confirmation email shortly.`,
+      });
+      
+      navigate("/");
+    } catch (error: any) {
+      console.error("Donation error:", error);
+      toast({
+        title: "Error",
+        description: "Failed to process donation. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
