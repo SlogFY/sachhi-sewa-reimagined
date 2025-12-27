@@ -97,6 +97,60 @@ export type Database = {
           },
         ]
       }
+      fundraiser_requests: {
+        Row: {
+          admin_notes: string | null
+          category: string
+          created_at: string
+          description: string
+          goal_amount: number
+          id: string
+          image_url: string | null
+          requester_email: string
+          requester_name: string
+          requester_phone: string | null
+          status: string
+          story: string | null
+          title: string
+          updated_at: string
+          video_url: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          category: string
+          created_at?: string
+          description: string
+          goal_amount?: number
+          id?: string
+          image_url?: string | null
+          requester_email: string
+          requester_name: string
+          requester_phone?: string | null
+          status?: string
+          story?: string | null
+          title: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          category?: string
+          created_at?: string
+          description?: string
+          goal_amount?: number
+          id?: string
+          image_url?: string | null
+          requester_email?: string
+          requester_name?: string
+          requester_phone?: string | null
+          status?: string
+          story?: string | null
+          title?: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string

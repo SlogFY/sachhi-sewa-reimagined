@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Plus, LogOut, Users, IndianRupee, TrendingUp, Loader2 } from "lucide-react";
+import { X, Plus, LogOut, Users, IndianRupee, TrendingUp, Loader2, Clock, Check, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -49,11 +49,28 @@ interface Campaign {
   is_active: boolean;
 }
 
+interface FundraiserRequest {
+  id: string;
+  requester_name: string;
+  requester_email: string;
+  requester_phone: string | null;
+  title: string;
+  description: string;
+  category: string;
+  goal_amount: number;
+  story: string | null;
+  image_url: string | null;
+  video_url: string | null;
+  status: string;
+  created_at: string;
+}
+
 const AdminPanel = ({ isOpen, onClose }: AdminPanelProps) => {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<"donations" | "campaigns" | "add">("donations");
+  const [activeTab, setActiveTab] = useState<"donations" | "campaigns" | "requests" | "add">("donations");
   const [donations, setDonations] = useState<Donation[]>([]);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [requests, setRequests] = useState<FundraiserRequest[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [newCampaign, setNewCampaign] = useState({
@@ -94,6 +111,15 @@ const AdminPanel = ({ isOpen, onClose }: AdminPanelProps) => {
 
       if (campaignsError) throw campaignsError;
       setCampaigns(campaignsData || []);
+
+      // Fetch fundraiser requests
+      const { data: requestsData, error: requestsError } = await supabase
+        .from("fundraiser_requests")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (requestsError) throw requestsError;
+      setRequests(requestsData || []);
     } catch (error: any) {
       console.error("Fetch error:", error);
       toast({
@@ -174,6 +200,69 @@ const AdminPanel = ({ isOpen, onClose }: AdminPanelProps) => {
     }
   };
 
+  const handleApproveRequest = async (request: FundraiserRequest) => {
+    try {
+      // Create campaign from request
+      const { error: campaignError } = await supabase
+        .from("campaigns")
+        .insert({
+          title: request.title,
+          description: request.description,
+          category: request.category,
+          goal_amount: request.goal_amount,
+          image_url: request.image_url,
+        });
+
+      if (campaignError) throw campaignError;
+
+      // Update request status
+      const { error: updateError } = await supabase
+        .from("fundraiser_requests")
+        .update({ status: "approved" })
+        .eq("id", request.id);
+
+      if (updateError) throw updateError;
+
+      toast({
+        title: "Approved!",
+        description: "The fundraiser is now live.",
+      });
+      fetchData();
+    } catch (error: any) {
+      console.error("Approve error:", error);
+      toast({
+        title: "Error",
+        description: "Failed to approve request",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleRejectRequest = async (requestId: string) => {
+    try {
+      const { error } = await supabase
+        .from("fundraiser_requests")
+        .update({ status: "rejected" })
+        .eq("id", requestId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Rejected",
+        description: "The request has been rejected.",
+      });
+      fetchData();
+    } catch (error: any) {
+      console.error("Reject error:", error);
+      toast({
+        title: "Error",
+        description: "Failed to reject request",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const pendingRequests = requests.filter(r => r.status === "pending");
   const totalDonations = donations.reduce((sum, d) => sum + Number(d.amount), 0);
   const totalCampaigns = campaigns.length;
   const totalDonors = new Set(donations.map(d => d.donor_email)).size;
@@ -250,7 +339,7 @@ const AdminPanel = ({ isOpen, onClose }: AdminPanelProps) => {
             </div>
 
             {/* Tabs */}
-            <div className="flex gap-2 mb-6">
+            <div className="flex flex-wrap gap-2 mb-6">
               <Button
                 variant={activeTab === "donations" ? "primary" : "outline"}
                 onClick={() => setActiveTab("donations")}
@@ -262,6 +351,19 @@ const AdminPanel = ({ isOpen, onClose }: AdminPanelProps) => {
                 onClick={() => setActiveTab("campaigns")}
               >
                 Campaigns
+              </Button>
+              <Button
+                variant={activeTab === "requests" ? "primary" : "outline"}
+                onClick={() => setActiveTab("requests")}
+                className="relative"
+              >
+                <Clock className="w-4 h-4 mr-2" />
+                Pending Requests
+                {pendingRequests.length > 0 && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-destructive text-destructive-foreground text-xs rounded-full flex items-center justify-center">
+                    {pendingRequests.length}
+                  </span>
+                )}
               </Button>
               <Button
                 variant={activeTab === "add" ? "primary" : "outline"}
@@ -366,6 +468,95 @@ const AdminPanel = ({ isOpen, onClose }: AdminPanelProps) => {
                         )}
                       </TableBody>
                     </Table>
+                  </div>
+                )}
+
+                {activeTab === "requests" && (
+                  <div className="space-y-4">
+                    {requests.length === 0 ? (
+                      <div className="bg-card rounded-xl border border-border p-8 text-center text-muted-foreground">
+                        No fundraiser requests yet
+                      </div>
+                    ) : (
+                      requests.map((request) => (
+                        <div
+                          key={request.id}
+                          className="bg-card rounded-xl border border-border p-6"
+                        >
+                          <div className="flex items-start justify-between gap-4 mb-4">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                  request.status === "pending"
+                                    ? "bg-yellow-500/10 text-yellow-600"
+                                    : request.status === "approved"
+                                    ? "bg-primary/10 text-primary"
+                                    : "bg-destructive/10 text-destructive"
+                                }`}>
+                                  {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+                                </span>
+                                <span className="text-xs text-muted-foreground">
+                                  {new Date(request.created_at).toLocaleDateString("en-IN")}
+                                </span>
+                              </div>
+                              <h3 className="text-lg font-display font-bold text-foreground mb-1">
+                                {request.title}
+                              </h3>
+                              <p className="text-sm text-muted-foreground mb-2">
+                                {request.description}
+                              </p>
+                              <div className="flex flex-wrap gap-4 text-sm">
+                                <div>
+                                  <span className="text-muted-foreground">Requester:</span>{" "}
+                                  <span className="font-medium text-foreground">{request.requester_name}</span>
+                                </div>
+                                <div>
+                                  <span className="text-muted-foreground">Email:</span>{" "}
+                                  <span className="text-foreground">{request.requester_email}</span>
+                                </div>
+                                <div>
+                                  <span className="text-muted-foreground">Category:</span>{" "}
+                                  <span className="text-foreground">{request.category}</span>
+                                </div>
+                                <div>
+                                  <span className="text-muted-foreground">Goal:</span>{" "}
+                                  <span className="font-semibold text-primary">{formatCurrency(Number(request.goal_amount))}</span>
+                                </div>
+                              </div>
+                              {request.image_url && (
+                                <div className="mt-3">
+                                  <img
+                                    src={request.image_url}
+                                    alt={request.title}
+                                    className="w-32 h-24 object-cover rounded-lg"
+                                  />
+                                </div>
+                              )}
+                            </div>
+                            {request.status === "pending" && (
+                              <div className="flex gap-2 shrink-0">
+                                <Button
+                                  variant="primary"
+                                  size="sm"
+                                  onClick={() => handleApproveRequest(request)}
+                                >
+                                  <Check className="w-4 h-4 mr-1" />
+                                  Approve
+                                </Button>
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  onClick={() => handleRejectRequest(request.id)}
+                                >
+                                  <XCircle className="w-4 h-4 mr-1" />
+                                  Reject
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ))
+                    )}
                   </div>
                 )}
 
