@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Plus, LogOut, Users, IndianRupee, TrendingUp, Loader2, Clock, Check, XCircle } from "lucide-react";
+import { X, Plus, LogOut, Users, IndianRupee, TrendingUp, Loader2, Clock, Check, XCircle, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -65,12 +65,26 @@ interface FundraiserRequest {
   created_at: string;
 }
 
+interface MonthlyDonation {
+  id: string;
+  donor_name: string;
+  donor_email: string;
+  donor_phone: string | null;
+  amount: number;
+  plan_id: string;
+  plan_name: string;
+  is_indian_citizen: boolean;
+  receipt_number: string;
+  created_at: string;
+}
+
 const AdminPanel = ({ isOpen, onClose }: AdminPanelProps) => {
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState<"donations" | "campaigns" | "requests" | "add">("donations");
+  const [activeTab, setActiveTab] = useState<"donations" | "campaigns" | "requests" | "monthly" | "add">("donations");
   const [donations, setDonations] = useState<Donation[]>([]);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [requests, setRequests] = useState<FundraiserRequest[]>([]);
+  const [monthlyDonations, setMonthlyDonations] = useState<MonthlyDonation[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [newCampaign, setNewCampaign] = useState({
@@ -119,6 +133,15 @@ const AdminPanel = ({ isOpen, onClose }: AdminPanelProps) => {
         .order("created_at", { ascending: false });
 
       if (requestsError) throw requestsError;
+
+      // Fetch monthly donations
+      const { data: monthlyData, error: monthlyError } = await supabase
+        .from("monthly_donations")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (monthlyError) throw monthlyError;
+      setMonthlyDonations(monthlyData || []);
       setRequests(requestsData || []);
     } catch (error: any) {
       console.error("Fetch error:", error);
@@ -264,8 +287,9 @@ const AdminPanel = ({ isOpen, onClose }: AdminPanelProps) => {
 
   const pendingRequests = requests.filter(r => r.status === "pending");
   const totalDonations = donations.reduce((sum, d) => sum + Number(d.amount), 0);
+  const totalMonthlyDonations = monthlyDonations.reduce((sum, d) => sum + Number(d.amount), 0);
   const totalCampaigns = campaigns.length;
-  const totalDonors = new Set(donations.map(d => d.donor_email)).size;
+  const totalDonors = new Set([...donations.map(d => d.donor_email), ...monthlyDonations.map(d => d.donor_email)]).size;
 
   const formatCurrency = (amount: number) => {
     return `₹${amount.toLocaleString("en-IN")}`;
@@ -302,15 +326,26 @@ const AdminPanel = ({ isOpen, onClose }: AdminPanelProps) => {
           <div className="flex-1 overflow-y-auto">
             <div className="container mx-auto px-4 py-8">
             {/* Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
               <div className="bg-card rounded-xl p-6 border border-border">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
                     <IndianRupee className="w-6 h-6 text-primary" />
                   </div>
                   <div>
-                    <p className="text-muted-foreground text-sm">Total Donations</p>
+                    <p className="text-muted-foreground text-sm">One-Time Donations</p>
                     <p className="text-2xl font-bold text-foreground">{formatCurrency(totalDonations)}</p>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-card rounded-xl p-6 border border-border">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-full bg-pink-500/10 flex items-center justify-center">
+                    <Heart className="w-6 h-6 text-pink-500" />
+                  </div>
+                  <div>
+                    <p className="text-muted-foreground text-sm">Monthly Pledges</p>
+                    <p className="text-2xl font-bold text-foreground">{formatCurrency(totalMonthlyDonations)}/mo</p>
                   </div>
                 </div>
               </div>
@@ -351,6 +386,13 @@ const AdminPanel = ({ isOpen, onClose }: AdminPanelProps) => {
                 onClick={() => setActiveTab("campaigns")}
               >
                 Campaigns
+              </Button>
+              <Button
+                variant={activeTab === "monthly" ? "primary" : "outline"}
+                onClick={() => setActiveTab("monthly")}
+              >
+                <Heart className="w-4 h-4 mr-2" />
+                Monthly Donations
               </Button>
               <Button
                 variant={activeTab === "requests" ? "primary" : "outline"}
@@ -462,6 +504,47 @@ const AdminPanel = ({ isOpen, onClose }: AdminPanelProps) => {
                                 }`}>
                                   {campaign.is_active ? "Active" : "Inactive"}
                                 </span>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+
+                {activeTab === "monthly" && (
+                  <div className="bg-card rounded-xl border border-border overflow-hidden">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Donor Name</TableHead>
+                          <TableHead>Email</TableHead>
+                          <TableHead>Plan</TableHead>
+                          <TableHead>Amount/Mo</TableHead>
+                          <TableHead>Receipt No</TableHead>
+                          <TableHead>Date</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {monthlyDonations.length === 0 ? (
+                          <TableRow>
+                            <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                              No monthly donations yet
+                            </TableCell>
+                          </TableRow>
+                        ) : (
+                          monthlyDonations.map((donation) => (
+                            <TableRow key={donation.id}>
+                              <TableCell className="font-medium">{donation.donor_name}</TableCell>
+                              <TableCell>{donation.donor_email}</TableCell>
+                              <TableCell className="max-w-[200px] truncate">{donation.plan_name}</TableCell>
+                              <TableCell className="text-pink-500 font-semibold">
+                                {formatCurrency(Number(donation.amount))}/mo
+                              </TableCell>
+                              <TableCell className="font-mono text-sm">{donation.receipt_number}</TableCell>
+                              <TableCell>
+                                {new Date(donation.created_at).toLocaleDateString("en-IN")}
                               </TableCell>
                             </TableRow>
                           ))

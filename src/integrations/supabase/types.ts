@@ -151,6 +151,45 @@ export type Database = {
         }
         Relationships: []
       }
+      monthly_donations: {
+        Row: {
+          amount: number
+          created_at: string
+          donor_email: string
+          donor_name: string
+          donor_phone: string | null
+          id: string
+          is_indian_citizen: boolean
+          plan_id: string
+          plan_name: string
+          receipt_number: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          donor_email: string
+          donor_name: string
+          donor_phone?: string | null
+          id?: string
+          is_indian_citizen?: boolean
+          plan_id: string
+          plan_name: string
+          receipt_number: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          donor_email?: string
+          donor_name?: string
+          donor_phone?: string | null
+          id?: string
+          is_indian_citizen?: boolean
+          plan_id?: string
+          plan_name?: string
+          receipt_number?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
