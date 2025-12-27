@@ -70,12 +70,12 @@ const Navbar = () => {
   const isHomePage = location.pathname === "/";
 
   const navLinks = [
-    { name: "Home", href: isHomePage ? "#home" : "/", isRoute: !isHomePage },
-    { name: "About", href: isHomePage ? "#about" : "/#about", isRoute: !isHomePage },
-    { name: "Causes", href: isHomePage ? "#causes" : "/#causes", isRoute: !isHomePage },
+    { name: "Home", href: "/", isRoute: true },
+    { name: "About", href: "/about", isRoute: true },
+    { name: "Causes", href: "/causes", isRoute: true },
     { name: "Fundraisers", href: "/fundraisers", isRoute: true },
-    { name: "How It Works", href: isHomePage ? "#how-it-works" : "/#how-it-works", isRoute: !isHomePage },
-    { name: "Contact", href: isHomePage ? "#contact" : "/#contact", isRoute: !isHomePage },
+    { name: "How It Works", href: "/how-it-works", isRoute: true },
+    { name: "Contact", href: "/contact", isRoute: true },
   ];
 
   return (

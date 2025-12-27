@@ -1,5 +1,7 @@
 import { motion } from "framer-motion";
-import { Heart, GraduationCap, PawPrint, Utensils } from "lucide-react";
+import { Heart, GraduationCap, PawPrint, Utensils, ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 const causes = [
   {
@@ -123,6 +125,21 @@ const CausesSection = () => {
             );
           })}
         </div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+          className="text-center mt-12"
+        >
+          <Link to="/causes">
+            <Button variant="outline" size="lg" className="group">
+              View All Causes
+              <ArrowRight className="ml-2 w-4 h-4 transition-transform group-hover:translate-x-1" />
+            </Button>
+          </Link>
+        </motion.div>
       </div>
     </section>
   );

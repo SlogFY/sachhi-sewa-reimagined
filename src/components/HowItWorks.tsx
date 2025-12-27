@@ -1,5 +1,7 @@
 import { motion } from "framer-motion";
-import { FileText, Share2, CreditCard, HeartHandshake } from "lucide-react";
+import { FileText, Share2, CreditCard, HeartHandshake, ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 const steps = [
   {
@@ -113,6 +115,21 @@ const HowItWorks = () => {
               <p className="text-sm text-muted-foreground">{feature.description}</p>
             </div>
           ))}
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.5 }}
+          className="text-center mt-12"
+        >
+          <Link to="/how-it-works">
+            <Button variant="outline" size="lg" className="group">
+              Learn More
+              <ArrowRight className="ml-2 w-4 h-4 transition-transform group-hover:translate-x-1" />
+            </Button>
+          </Link>
         </motion.div>
       </div>
     </section>
