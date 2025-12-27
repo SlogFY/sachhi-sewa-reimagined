@@ -1,8 +1,11 @@
 import { motion } from "framer-motion";
 import { ArrowRight, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 const CTASection = () => {
+  const navigate = useNavigate();
+
   return (
     <section className="py-24 bg-gradient-hero relative overflow-hidden">
       {/* Decorative elements */}
@@ -34,11 +37,11 @@ const CTASection = () => {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button variant="cta" size="lg" className="group">
+            <Button variant="cta" size="lg" className="group" onClick={() => navigate('/fundraisers')}>
               Start a Fundraiser
               <ArrowRight className="ml-2 w-5 h-5 transition-transform group-hover:translate-x-1" />
             </Button>
-            <Button variant="ctaOutline" size="lg">
+            <Button variant="ctaOutline" size="lg" onClick={() => navigate('/fundraisers')}>
               Donate Now
             </Button>
           </div>
