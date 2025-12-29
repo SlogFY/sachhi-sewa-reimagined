@@ -3,17 +3,20 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, Heart, CircleUser, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import AdminLoginModal from "./AdminLoginModal";
 import AdminPanel from "./AdminPanel";
+import UserProfileDropdown from "./UserProfileDropdown";
 import { supabase } from "@/integrations/supabase/client";
+import type { User, Session } from "@supabase/supabase-js";
 
 const Navbar = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isAdminLoginOpen, setIsAdminLoginOpen] = useState(false);
   const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -24,50 +27,56 @@ const Navbar = () => {
   }, []);
 
   useEffect(() => {
-    const checkAdminStatus = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        const { data } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", session.user.id)
-          .eq("role", "admin")
-          .maybeSingle();
-        
-        setIsAdmin(!!data);
-      }
-    };
-
-    checkAdminStatus();
-
+    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      
       if (event === "SIGNED_OUT") {
         setIsAdmin(false);
       } else if (session?.user) {
         setTimeout(() => {
-          checkAdminStatus();
+          checkAdminStatus(session.user.id);
         }, 0);
+      }
+    });
+
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        checkAdminStatus(session.user.id);
       }
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  const handleAdminClick = () => {
-    if (isAdmin) {
+  // Handle admin panel open from auth redirect
+  useEffect(() => {
+    if (location.state?.openAdminPanel && isAdmin) {
       setIsAdminPanelOpen(true);
-    } else {
-      setIsAdminLoginOpen(true);
+      // Clear the state
+      window.history.replaceState({}, document.title);
     }
+  }, [location.state, isAdmin]);
+
+  const checkAdminStatus = async (userId: string) => {
+    const { data } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .eq("role", "admin")
+      .maybeSingle();
+    
+    setIsAdmin(!!data);
   };
 
-  const handleLoginSuccess = () => {
-    setIsAdminLoginOpen(false);
-    setIsAdmin(true);
-    setIsAdminPanelOpen(true);
+  const handleAuthClick = () => {
+    navigate("/auth");
   };
 
-  const location = useLocation();
   const isHomePage = location.pathname === "/";
 
   const navLinks = [
@@ -93,7 +102,7 @@ const Navbar = () => {
       >
         <div className="container mx-auto px-4 flex items-center justify-between">
           {/* Logo */}
-          <a href="#home" className="flex items-center gap-2 group">
+          <a href="/" className="flex items-center gap-2 group">
             <div className="w-10 h-10 rounded-full bg-gradient-hero flex items-center justify-center shadow-glow">
               <Heart className="w-5 h-5 text-primary-foreground fill-current" />
             </div>
@@ -127,9 +136,17 @@ const Navbar = () => {
 
           {/* CTA Buttons */}
           <div className="hidden lg:flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={handleAdminClick} title={isAdmin ? "Admin Panel" : "Login"}>
-              {isAdmin ? <Settings className="w-5 h-5" /> : <CircleUser className="w-5 h-5" />}
-            </Button>
+            {user ? (
+              <UserProfileDropdown 
+                user={user} 
+                isAdmin={isAdmin} 
+                onAdminClick={() => setIsAdminPanelOpen(true)} 
+              />
+            ) : (
+              <Button variant="ghost" size="icon" onClick={handleAuthClick} title="Login">
+                <CircleUser className="w-5 h-5" />
+              </Button>
+            )}
             <Button variant="outline" size="sm" onClick={() => navigate('/start-fundraiser')}>
               Start a Fundraiser
             </Button>
@@ -199,10 +216,34 @@ const Navbar = () => {
                   )
                 )}
                 <div className="flex flex-col gap-3 pt-4 border-t border-border">
-                  <Button variant="ghost" className="w-full justify-start" onClick={handleAdminClick}>
-                    {isAdmin ? <Settings className="w-4 h-4 mr-2" /> : <CircleUser className="w-4 h-4 mr-2" />}
-                    {isAdmin ? "Admin Panel" : "Login"}
-                  </Button>
+                  {user ? (
+                    <>
+                      <div className="flex items-center gap-3 p-2">
+                        <div className="w-10 h-10 rounded-full bg-gradient-hero flex items-center justify-center text-primary-foreground font-semibold">
+                          {(user.user_metadata?.full_name || user.email)?.substring(0, 2).toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="font-medium text-foreground">{user.user_metadata?.full_name || user.email?.split("@")[0]}</p>
+                          <p className="text-sm text-muted-foreground">{user.email}</p>
+                        </div>
+                      </div>
+                      {isAdmin && (
+                        <Button 
+                          variant="outline" 
+                          className="w-full justify-start" 
+                          onClick={() => { setIsMobileMenuOpen(false); setIsAdminPanelOpen(true); }}
+                        >
+                          <Settings className="w-4 h-4 mr-2" />
+                          Admin Panel
+                        </Button>
+                      )}
+                    </>
+                  ) : (
+                    <Button variant="ghost" className="w-full justify-start" onClick={() => { setIsMobileMenuOpen(false); navigate('/auth'); }}>
+                      <CircleUser className="w-4 h-4 mr-2" />
+                      Login / Sign Up
+                    </Button>
+                  )}
                   <Button variant="outline" className="w-full" onClick={() => { setIsMobileMenuOpen(false); navigate('/start-fundraiser'); }}>
                     Start a Fundraiser
                   </Button>
@@ -215,12 +256,6 @@ const Navbar = () => {
           )}
         </AnimatePresence>
       </motion.nav>
-
-      <AdminLoginModal
-        isOpen={isAdminLoginOpen}
-        onClose={() => setIsAdminLoginOpen(false)}
-        onLoginSuccess={handleLoginSuccess}
-      />
 
       <AdminPanel
         isOpen={isAdminPanelOpen}

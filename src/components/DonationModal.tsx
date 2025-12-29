@@ -1,12 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Heart, CheckCircle, Download, Loader2 } from "lucide-react";
+import { X, Heart, CheckCircle, Download, Loader2, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
+import type { User } from "@supabase/supabase-js";
 
 interface Campaign {
   id: string;
@@ -33,6 +35,8 @@ interface DonationReceipt {
 
 const DonationModal = ({ isOpen, onClose, campaign, onDonationComplete }: DonationModalProps) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const [user, setUser] = useState<User | null>(null);
   const [step, setStep] = useState<"form" | "processing" | "success">("form");
   const [receipt, setReceipt] = useState<DonationReceipt | null>(null);
   const [formData, setFormData] = useState({
@@ -43,9 +47,47 @@ const DonationModal = ({ isOpen, onClose, campaign, onDonationComplete }: Donati
     message: "",
   });
 
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        // Pre-fill form with user data
+        setFormData(prev => ({
+          ...prev,
+          name: session.user.user_metadata?.full_name || prev.name,
+          email: session.user.email || prev.email,
+          phone: session.user.user_metadata?.phone || prev.phone,
+        }));
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        setFormData(prev => ({
+          ...prev,
+          name: session.user.user_metadata?.full_name || prev.name,
+          email: session.user.email || prev.email,
+          phone: session.user.user_metadata?.phone || prev.phone,
+        }));
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!user) {
+      toast({
+        title: "Login Required",
+        description: "Please login to make a donation",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!campaign) return;
     
     if (!formData.name || !formData.email || !formData.amount) {
@@ -70,8 +112,6 @@ const DonationModal = ({ isOpen, onClose, campaign, onDonationComplete }: Donati
     setStep("processing");
 
     try {
-      // NOTE: Public donors (not logged in) cannot SELECT from the donations table (admin-only).
-      // So we generate a receipt number client-side and avoid `.select()` on insert.
       const receiptNumber = `RCP-${new Date().toISOString().slice(0, 10).replace(/-/g, "")}-${Math.random()
         .toString(16)
         .slice(2, 10)
@@ -85,6 +125,7 @@ const DonationModal = ({ isOpen, onClose, campaign, onDonationComplete }: Donati
         amount,
         message: formData.message || null,
         receipt_number: receiptNumber,
+        user_id: user.id,
       });
 
       if (error) throw error;
@@ -120,6 +161,11 @@ const DonationModal = ({ isOpen, onClose, campaign, onDonationComplete }: Donati
     setFormData({ name: "", email: "", phone: "", amount: "", message: "" });
     setReceipt(null);
     onClose();
+  };
+
+  const handleLoginRedirect = () => {
+    handleClose();
+    navigate("/auth");
   };
 
   const downloadReceipt = () => {
@@ -197,7 +243,24 @@ SacchiSewa Foundation
 
             {/* Content */}
             <div className="p-6">
-              {step === "form" && campaign && (
+              {!user && step === "form" && (
+                <div className="text-center py-8">
+                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                    <LogIn className="w-8 h-8 text-primary" />
+                  </div>
+                  <h3 className="text-xl font-display font-bold text-foreground mb-2">
+                    Login Required
+                  </h3>
+                  <p className="text-muted-foreground mb-6">
+                    Please create an account or login to make a donation
+                  </p>
+                  <Button variant="primary" onClick={handleLoginRedirect} className="w-full">
+                    Login / Sign Up
+                  </Button>
+                </div>
+              )}
+
+              {user && step === "form" && campaign && (
                 <form onSubmit={handleSubmit} className="space-y-5">
                   <div className="p-4 bg-muted rounded-xl">
                     <p className="text-sm text-muted-foreground">Donating to</p>
