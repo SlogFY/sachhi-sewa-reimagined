@@ -107,7 +107,7 @@ const Auth = () => {
           email: formData.email,
           password: formData.password,
           options: {
-            emailRedirectTo: `${window.location.origin}/`,
+            emailRedirectTo: `${window.location.origin}/auth`,
             data: {
               full_name: formData.name,
               phone: formData.phone,
@@ -117,7 +117,16 @@ const Auth = () => {
 
         if (error) throw error;
 
-        if (data.user) {
+        if (data.user && !data.session) {
+          // Email verification required
+          toast({
+            title: "Verification Email Sent! 📧",
+            description: "Please check your email and click the verification link to complete registration.",
+          });
+          setFormData({ email: "", password: "", name: "", phone: "" });
+          setIsLogin(true);
+        } else if (data.session) {
+          // Auto-confirmed (shouldn't happen now)
           toast({
             title: "Account Created!",
             description: "Welcome to SacchiSewa!",
