@@ -147,7 +147,13 @@ const Navbar = () => {
                 <CircleUser className="w-5 h-5" />
               </Button>
             )}
-            <Button variant="outline" size="sm" onClick={() => navigate('/start-fundraiser')}>
+            <Button variant="outline" size="sm" onClick={() => {
+              if (location.pathname === '/start-fundraiser') {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              } else {
+                navigate('/start-fundraiser');
+              }
+            }}>
               Start a Fundraiser
             </Button>
             <Button 
@@ -244,7 +250,14 @@ const Navbar = () => {
                       Login / Sign Up
                     </Button>
                   )}
-                  <Button variant="outline" className="w-full" onClick={() => { setIsMobileMenuOpen(false); navigate('/start-fundraiser'); }}>
+                  <Button variant="outline" className="w-full" onClick={() => { 
+                    setIsMobileMenuOpen(false); 
+                    if (location.pathname === '/start-fundraiser') {
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    } else {
+                      navigate('/start-fundraiser'); 
+                    }
+                  }}>
                     Start a Fundraiser
                   </Button>
                   <Button variant="primary" className="w-full" onClick={() => { setIsMobileMenuOpen(false); navigate('/monthly-donate'); }}>
