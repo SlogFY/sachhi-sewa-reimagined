@@ -102,14 +102,14 @@ const Navbar = () => {
       >
         <div className="container mx-auto px-4 flex items-center justify-between">
           {/* Logo */}
-          <a href="/" className="flex items-center gap-2 group">
-            <div className="w-10 h-10 rounded-full bg-gradient-hero flex items-center justify-center shadow-glow">
-              <Heart className="w-5 h-5 text-primary-foreground fill-current" />
-            </div>
-            <span className="text-2xl font-display font-bold text-foreground">
-              Sacchi<span className="text-primary">Sewa</span>
-            </span>
-          </a>
+        <Link to="/" className="flex items-center gap-2 group">
+          <div className="w-10 h-10 rounded-full bg-gradient-hero flex items-center justify-center shadow-glow">
+            <Heart className="w-5 h-5 text-primary-foreground fill-current" />
+          </div>
+          <span className="text-2xl font-display font-bold text-foreground">
+            Sacchi<span className="text-primary">Sewa</span>
+          </span>
+        </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center gap-8">
